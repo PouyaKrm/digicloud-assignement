@@ -1,5 +1,7 @@
 from typing import Union
 
+from django.utils.translation import gettext
+
 
 class ApplicationErrorException(Exception):
 
@@ -13,3 +15,7 @@ class ApplicationErrorException(Exception):
 
     def __str__(self):
         return super().__str__()
+
+
+class ErrorCodes:
+    RECORD_NOT_FOUND = {'code': 10, "message": gettext("record not found")}
