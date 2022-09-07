@@ -122,3 +122,13 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 AUTH_USER_MODEL = "users.ApplicationUser"
+
+
+REST_FRAMEWORK = {
+
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+
+    'EXCEPTION_HANDLER': 'rss_feed.app_exception_handling.custom_exception_handler',
+}
