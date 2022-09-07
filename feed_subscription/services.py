@@ -22,6 +22,7 @@ def subscribe_to_channel(*args, user: ApplicationUser, rss_link: str) -> FeedCha
         channel.description = channel_data.description
         channel.link = channel_data.link
         channel.save()
+        _check_feed(rss_link)
         return channel
 
 
@@ -57,13 +58,17 @@ def _check_feed(rss_link):
                 title = a.find('title').text
                 link = a.find('link').text
                 description = a.find('description')
-                # published = a.find('pubDate')
-                article = {
-                    'title': title,
-                    'link': link,
-                    # 'published': published
-                }
-                print(article)
+                media = a.find('content:encoded')
+                if media is not None:
+                    print(media)
+                published = a.find('pubDate')
+                print(published)
+                # article = {
+                #     'title': title,
+                #     'link': link,
+                #     # 'published': published
+                # }
+                # print(article)
     except Exception as e:
         raise e
 
