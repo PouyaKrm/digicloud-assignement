@@ -20,3 +20,4 @@ class ApplicationErrorException(Exception):
 class ErrorCodes:
     RECORD_NOT_FOUND = {'code': 10, "message": gettext("record not found")}
     FAILED_TO_FETCH_CHANNEL_DATA = {'code': 12, "message": gettext("Failed to fetch channel data")}
+    FAILED_TO_FETCH_ARTICLES = {'code': 13, "message": gettext("Failed to fetch feed articles")}
