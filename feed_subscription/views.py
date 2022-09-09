@@ -18,6 +18,8 @@ from feed_subscription.services import subscribe_to_channel, delete_channel
 class ChannelSubscriptionAPI(APIView):
     class FeedSubscriptionSerializer(BaseSerializer):
         rss_link = serializers.URLField()
+        title = serializers.CharField(max_length=80)
+
 
         def validate_rss_link(self, value):
             # exist = subscription_exists(user=self.request.user, rss_link=value)
@@ -26,7 +28,10 @@ class ChannelSubscriptionAPI(APIView):
             return value
 
     class Meta:
-        fields = ['rss_link']
+        fields = [
+            'rss_link',
+            'title',
+        ]
 
     def post(self, request: Request):
         sr = self.FeedSubscriptionSerializer(request=request, data=request.data)

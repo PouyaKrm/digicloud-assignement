@@ -23,6 +23,7 @@ class FeedChannel(BaseModel):
             return self.title
         return '-'
 
+
 class Article(BaseModel):
     channel = models.ForeignKey(FeedChannel, related_name="feeds", related_query_name="feeds", on_delete=models.CASCADE)
     title = models.TextField(null=True, blank=True)

@@ -134,6 +134,18 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'rss_feed.app_exception_handling.custom_exception_handler',
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://localhost:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+        "KEY_PREFIX": "example"
+    }
+}
+
+
 PAGINATION_PAGE_NUM = 25
 CELERY_BROKER_URL = "redis://localhost:6379"
 CELERY_RESULT_BACKEND = "redis://localhost:6379"
