@@ -11,6 +11,7 @@ class FeedChannel(BaseModel):
     title = models.TextField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     link = models.URLField(null=True, blank=True)
+    last_update = models.DateTimeField(null=True, blank=True)
     deleted = models.BooleanField(default=False)
 
     class Meta:

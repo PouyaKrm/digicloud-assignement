@@ -12,7 +12,7 @@ from base_app.pginations import BasePageNumberPagination
 from base_app.serializers import BaseSerializer
 from feed_subscription.selectors import channel_exists, get_user_existing_channels
 from feed_subscription.serializers import FeedSubscriptionReadOnlySerializer
-from feed_subscription.services import subscribe_to_channel, delete_channel
+from feed_subscription.services import subscribe_to_channel, delete_channel, update_channel, update_all_user_channels
 
 
 class ChannelSubscriptionAPI(APIView):
@@ -53,6 +53,17 @@ class ChannelRetrieveAPI(APIView):
         sub = delete_channel(user=request.user, subscription_id=subscription_id)
         sr = FeedSubscriptionReadOnlySerializer(sub, request=request)
         return ok(sr.data)
+
+
+class UpdateUserChannels(APIView):
+    def post(self, request: Request):
+        user_id = request.user.id
+        channel_id = request.query_params.get('channel_id')
+        if channel_id is not None:
+            update_channel.delay(user_id, int(channel_id))
+        else:
+            update_all_user_channels.delay(user_id)
+        return ok({"message": gettext("updating channels")})
 
 
 
