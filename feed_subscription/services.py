@@ -11,7 +11,7 @@ from feed_subscription.cache import is_user_channels_updating, is_user_channel_u
     set_user_channel_updating
 from feed_subscription.models import FeedChannel, Article
 from feed_subscription.selectors import try_get_channel_by_id, try_get_channel_by_rss_link, \
-    get_existing_channel_by_id, get_user_existing_channels, get_channel_by_id
+    get_existing_channel_by_id, get_user_existing_channels, get_channel_by_id, get_article_by_id
 from users.models import ApplicationUser
 from users.selectors import get_user_by_id
 from utils.scraper import get_articles, get_channel_data
@@ -99,6 +99,20 @@ def update_channel(user_id: int, chanel_id: int):
         channel.save()
     finally:
         set_user_channel_updating(user_id=user_id, channel_id=chanel_id, insert=False)
+
+
+def toggle_article_favorite_by_article_id(*args, user: ApplicationUser, article_id: int) -> Article:
+    article = get_article_by_id(user=user, article_id=article_id)
+    article.is_favorite = not article.is_favorite
+    article.save()
+    return article
+
+
+def toggle_article_bookmark_by_article_id(*args, user: ApplicationUser, article_id: int) -> Article:
+    article = get_article_by_id(user=user, article_id=article_id)
+    article.is_bookmarked = not article.is_bookmarked
+    article.save()
+    return article
 
 
 def _create_articles_from_task_result(result_list: List[dict], channel_id: int, **kwargs) -> Optional[List[Article]]:

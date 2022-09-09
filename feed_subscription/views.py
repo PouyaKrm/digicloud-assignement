@@ -12,9 +12,11 @@ from rest_framework.views import APIView
 from base_app.http_helpers import ok
 from base_app.pginations import BasePageNumberPagination
 from base_app.serializers import BaseSerializer
-from feed_subscription.selectors import channel_exists, get_user_existing_channels, get_channel_by_id
-from feed_subscription.serializers import FeedSubscriptionReadOnlySerializer
-from feed_subscription.services import subscribe_to_channel, delete_channel, update_channel, update_all_user_channels
+from feed_subscription.selectors import channel_exists, get_user_existing_channels, get_channel_by_id, \
+    get_article_by_id, get_all_articles_by_channel_id
+from feed_subscription.serializers import FeedSubscriptionReadOnlySerializer, ArticleReadOnlySerializer
+from feed_subscription.services import subscribe_to_channel, delete_channel, update_channel, update_all_user_channels, \
+    toggle_article_bookmark_by_article_id, toggle_article_favorite_by_article_id
 
 
 class ChannelSubscriptionAPI(APIView):
@@ -69,4 +71,32 @@ class UpdateUserChannelsAPIView(APIView):
         return ok({"message": gettext("updating channels")})
 
 
+class ArticlesAPIView(APIView):
 
+    def get(self, request: Request, channel_id: int):
+        filter_like = request.query_params.get('favorite') is not None
+        filter_bookmark = request.query_params.get('bookmark') is not None
+        paginator = BasePageNumberPagination()
+        query_set = get_all_articles_by_channel_id(user=request.user,
+                                                   channel_id=channel_id,
+                                                   favorite=filter_like,
+                                                   bookmark=filter_bookmark
+                                                   )
+        result = paginator.paginate_queryset(query_set, request)
+        sr = ArticleReadOnlySerializer(result, many=True, request=request)
+        return ok(sr.data)
+
+
+class ToggleFavoriteArticleAPIView(APIView):
+
+    def put(self, request: Request, article_id: int):
+        ar = toggle_article_favorite_by_article_id(user=request.user, article_id=article_id)
+        sr = ArticleReadOnlySerializer(ar)
+        return ok(sr.data)
+
+
+class ToggleBookmarkArticleAPIView(APIView):
+    def put(self, request: Request, article_id: int):
+        ar = toggle_article_bookmark_by_article_id(user=request.user, article_id=article_id)
+        sr = ArticleReadOnlySerializer(ar)
+        return ok(sr.data)
