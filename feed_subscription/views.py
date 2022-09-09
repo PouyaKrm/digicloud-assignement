@@ -1,3 +1,5 @@
+import re
+
 from django.shortcuts import render
 
 # Create your views here.
@@ -10,7 +12,7 @@ from rest_framework.views import APIView
 from base_app.http_helpers import ok
 from base_app.pginations import BasePageNumberPagination
 from base_app.serializers import BaseSerializer
-from feed_subscription.selectors import channel_exists, get_user_existing_channels
+from feed_subscription.selectors import channel_exists, get_user_existing_channels, get_channel_by_id
 from feed_subscription.serializers import FeedSubscriptionReadOnlySerializer
 from feed_subscription.services import subscribe_to_channel, delete_channel, update_channel, update_all_user_channels
 
@@ -59,8 +61,9 @@ class UpdateUserChannels(APIView):
     def post(self, request: Request):
         user_id = request.user.id
         channel_id = request.query_params.get('channel_id')
-        if channel_id is not None:
-            update_channel.delay(user_id, int(channel_id))
+        if channel_id is not None and re.match(r'^\d+$', channel_id):
+            channel = get_channel_by_id(user=request.user, channel_id=int(channel_id))
+            update_channel.delay(user_id, int(channel.id))
         else:
             update_all_user_channels.delay(user_id)
         return ok({"message": gettext("updating channels")})

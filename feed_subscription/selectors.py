@@ -11,23 +11,23 @@ def channel_exists(*args, user: ApplicationUser, rss_link: str) -> bool:
     return FeedChannel.objects.filter(user=user, rss_link=rss_link, deleted=False).exists()
 
 
-def get_existing_channel_by_id(*args, user: ApplicationUser, subscription_id: int) -> FeedChannel:
+def get_existing_channel_by_id(*args, user: ApplicationUser, channel_id: int) -> FeedChannel:
     try:
-        return FeedChannel.objects.get(id=subscription_id, user=user, deleted=False)
+        return FeedChannel.objects.get(id=channel_id, user=user, deleted=False)
     except ObjectDoesNotExist:
         raise ApplicationErrorException(ErrorCodes.RECORD_NOT_FOUND)
 
 
-def get_channel_by_id(*args, user: ApplicationUser, subscription_id: int) -> FeedChannel:
+def get_channel_by_id(*args, user: ApplicationUser, channel_id: int) -> FeedChannel:
     try:
-        return FeedChannel.objects.get(id=subscription_id, user=user)
+        return FeedChannel.objects.get(id=channel_id, user=user)
     except ObjectDoesNotExist:
         raise ApplicationErrorException(ErrorCodes.RECORD_NOT_FOUND)
 
 
-def try_get_channel_by_id(*args, user: ApplicationUser, subscription_id: int) -> Optional[FeedChannel]:
+def try_get_channel_by_id(*args, user: ApplicationUser, channel_id: int) -> Optional[FeedChannel]:
     try:
-        return FeedChannel.objects.get(id=subscription_id, user=user)
+        return FeedChannel.objects.get(id=channel_id, user=user)
     except ObjectDoesNotExist:
         return None
 

@@ -4,6 +4,7 @@ import backoff
 from celery import shared_task, group
 from django.core.cache import cache
 from django.db import transaction
+from django.utils import timezone
 
 from base_app.error_codes import ApplicationErrorException, ErrorCodes
 from feed_subscription.cache import is_user_channels_updating, is_user_channel_updating, set_user_channels_updating, \
@@ -30,7 +31,7 @@ def subscribe_to_channel(*args, user: ApplicationUser, rss_link: str, title: str
 
 
 def delete_channel(*args, user: ApplicationUser, subscription_id: int) -> FeedChannel:
-    sub = get_existing_channel_by_id(user=user, subscription_id=subscription_id)
+    sub = get_existing_channel_by_id(user=user, channel_id=subscription_id)
     sub.deleted = True
     sub.save()
     return sub
@@ -69,6 +70,7 @@ def update_all_user_channels(user_id: int):
             delete_articles(channel_id=r.get("channel_id"))
             articles.extend(ar)
         Article.objects.bulk_create(articles)
+        channels.update(last_update=timezone.now())
     finally:
         set_user_channels_updating(user_id=user_id, insert=False)
 
@@ -79,17 +81,22 @@ def update_channel(user_id: int, chanel_id: int):
     print(updating)
     if updating:
         return
+    user = get_user_by_id(user_id=user_id)
+    channel = try_get_channel_by_id(user=user, channel_id=chanel_id)
+    if channel is None:
+        return
     set_user_channel_updating(user_id=user_id, channel_id=chanel_id, insert=True)
     try:
-        user = get_user_by_id(user_id=user_id)
-        channel = get_channel_by_id(user=user, subscription_id=chanel_id)
+        channel = get_channel_by_id(user=user, channel_id=chanel_id)
         result = fetch_articles_task.delay(channel.rss_link, chanel_id).get()
         if result is None:
             return
         articles = _create_articles_from_task_result(result.get('articles'), channel_id=channel.id)
-        if articles is not None and len(articles) == 0:
+        if articles is not None and len(articles) > 0:
             delete_articles(channel_id=channel.id)
             Article.objects.bulk_create(articles)
+        channel.last_update = timezone.now()
+        channel.save()
     finally:
         set_user_channel_updating(user_id=user_id, channel_id=chanel_id, insert=False)
 

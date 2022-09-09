@@ -5,8 +5,8 @@ from feed_subscription.models import FeedChannel, Article
 
 
 class FeedChannelModelAdmin(admin.ModelAdmin):
-    list_display = ['title', 'user']
-    list_display_links = ['title', 'user']
+    list_display = ['id', 'title', 'user', 'last_update']
+    list_display_links = ['id', 'title', 'user', 'last_update']
 
 
 class ArticleAdminModel(admin.ModelAdmin):
