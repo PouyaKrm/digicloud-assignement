@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_beat',
     'base_app',
     'users',
     'feed_subscription',
@@ -134,5 +135,8 @@ REST_FRAMEWORK = {
 }
 
 PAGINATION_PAGE_NUM = 25
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = "redis://localhost:6379"
+
 
 from .jwt_settings import *

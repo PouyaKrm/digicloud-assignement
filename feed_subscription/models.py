@@ -18,6 +18,10 @@ class FeedChannel(BaseModel):
         ordering = ['-create_date']
         db_table = "feed_channel"
 
+    def __str__(self):
+        if self.title is not None:
+            return self.title
+        return '-'
 
 class Article(BaseModel):
     channel = models.ForeignKey(FeedChannel, related_name="feeds", related_query_name="feeds", on_delete=models.CASCADE)

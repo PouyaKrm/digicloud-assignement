@@ -2,6 +2,7 @@ from typing import List, Union, Optional
 
 import requests
 from bs4 import BeautifulSoup, ResultSet
+from celery import shared_task
 
 from base_app.error_codes import ApplicationErrorException, ErrorCodes
 from feed_subscription.models import Article
@@ -22,6 +23,7 @@ class ArticleData:
         self.pub_date = pub_date
 
 
+@shared_task(autoretry_for=(requests.RequestException,), retry_backoff=True)
 def get_articles(rss_link: str) -> List[ArticleData]:
     try:
         r = requests.get(rss_link)
