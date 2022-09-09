@@ -57,7 +57,7 @@ class ChannelRetrieveAPI(APIView):
         return ok(sr.data)
 
 
-class UpdateUserChannels(APIView):
+class UpdateUserChannelsAPIView(APIView):
     def post(self, request: Request):
         user_id = request.user.id
         channel_id = request.query_params.get('channel_id')
