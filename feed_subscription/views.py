@@ -15,7 +15,7 @@ from base_app.serializers import BaseSerializer
 from feed_subscription.selectors import channel_exists, get_user_existing_channels, get_channel_by_id, \
     get_article_by_id, get_all_articles_by_channel_id
 from feed_subscription.serializers import FeedSubscriptionReadOnlySerializer, ArticleReadOnlySerializer
-from feed_subscription.services import subscribe_to_channel, delete_channel, update_channel, update_all_user_channels, \
+from feed_subscription.services import subscribe_to_channel, delete_channel, update_user_channel, update_all_user_channels, \
     toggle_article_bookmark_by_article_id, toggle_article_favorite_by_article_id
 
 
@@ -54,7 +54,7 @@ class ChannelSubscriptionAPI(APIView):
 
 class ChannelRetrieveAPI(APIView):
     def delete(self, request, subscription_id):
-        sub = delete_channel(user=request.user, subscription_id=subscription_id)
+        sub = delete_channel(user=request.user, channel_id=subscription_id)
         sr = FeedSubscriptionReadOnlySerializer(sub, request=request)
         return ok(sr.data)
 
@@ -65,7 +65,7 @@ class UpdateUserChannelsAPIView(APIView):
         channel_id = request.query_params.get('channel_id')
         if channel_id is not None and re.match(r'^\d+$', channel_id):
             channel = get_channel_by_id(user=request.user, channel_id=int(channel_id))
-            update_channel.delay(user_id, int(channel.id))
+            update_user_channel.delay(user_id, int(channel.id))
         else:
             update_all_user_channels.delay(user_id)
         return ok({"message": gettext("updating channels")})

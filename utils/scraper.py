@@ -1,5 +1,6 @@
 from typing import List, Union, Optional
 
+import backoff
 import requests
 from bs4 import BeautifulSoup, ResultSet
 from celery import shared_task
@@ -8,23 +9,8 @@ from base_app.error_codes import ApplicationErrorException, ErrorCodes
 from feed_subscription.models import Article
 
 
-class ChannelData:
-    def __init__(self, title, description, link):
-        self.title = title
-        self.description = description
-        self.link = link
-
-
-class ArticleData:
-    def __init__(self, title, description, link, pub_date):
-        self.title = title
-        self.description = description
-        self.link = link
-        self.pub_date = pub_date
-
-
-@shared_task(autoretry_for=(requests.RequestException,), retry_backoff=True)
-def get_articles(rss_link: str) -> List[ArticleData]:
+@shared_task
+def get_articles(rss_link: str) -> List[dict]:
     try:
         r = requests.get(rss_link)
         if not r.status_code == 200:
@@ -37,25 +23,11 @@ def get_articles(rss_link: str) -> List[ArticleData]:
             link = _find_field_or_none('link', a)
             description = _find_field_or_none('description', a)
             pub_date = _find_field_or_none('pubDate', a)
-            article = ArticleData(title=title, link=link, description=description, pub_date=pub_date)
+            article = {'title': title, 'description': description, 'link': link}
             result.append(article)
         return result
     except (requests.RequestException, AttributeError) as e:
         raise ApplicationErrorException(ErrorCodes.FAILED_TO_FETCH_ARTICLES, e)
-
-
-def get_channel_data(rss_link: str) -> ChannelData:
-    try:
-        r = requests.get(rss_link)
-        if not r.status_code == 200:
-            raise ApplicationErrorException(ErrorCodes.FAILED_TO_FETCH_CHANNEL_DATA)
-        soup = BeautifulSoup(r.content, features="xml")
-        title = _find_field_or_none('title', soup)
-        link = _find_field_or_none('link', soup)
-        description = _find_field_or_none('description', soup)
-        return ChannelData(title, description, link)
-    except (requests.RequestException, AttributeError) as e:
-        raise ApplicationErrorException(ErrorCodes.FAILED_TO_FETCH_CHANNEL_DATA, e)
 
 
 def _find_field_or_none(key: str, result_set: Union[ResultSet, BeautifulSoup]) -> Optional:
@@ -63,5 +35,6 @@ def _find_field_or_none(key: str, result_set: Union[ResultSet, BeautifulSoup]) -
     if result is not None:
         return result.text
     return None
+
 
 

@@ -3,22 +3,15 @@ from typing import List
 from base_app.tests import *
 from feed_subscription.models import FeedChannel, Article
 
-#
-# class TestArticles:
-#     def __init__(self, articles, channel, user):
-#         self.articles = articles
-#         self.channel = channel
-#         self.user = user
-
 
 @pytest.fixture
 def create_channel(db):
-    def create(*args, user: ApplicationUser, rss_link: str = None):
+    def create(*args, user: ApplicationUser, rss_link: str = None, delete=False):
         title = fake.pystr()
         link = rss_link
         if rss_link is None:
             link = fake.uri()
-        return FeedChannel.objects.create(user=user, title=title, rss_link=link)
+        return FeedChannel.objects.create(user=user, title=title, rss_link=link, deleted=delete)
 
     return create
 

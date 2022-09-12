@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -41,6 +41,10 @@ def try_get_channel_by_rss_link(*args, user: ApplicationUser, rss_link: str) -> 
 
 def get_user_existing_channels(*args, user: ApplicationUser):
     return FeedChannel.objects.filter(user=user, deleted=False)
+
+
+def get_user_existing_channels_id_in(*args, user: ApplicationUser, channel_ids: List[int]):
+    return get_user_existing_channels(user=user).filter(id__in=channel_ids)
 
 
 def get_all_articles_by_channel_id(*args, user: ApplicationUser, channel_id: int, favorite=False, bookmark=False):

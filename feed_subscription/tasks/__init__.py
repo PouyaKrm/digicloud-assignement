@@ -1,7 +1,7 @@
-from feed_subscription.services import fetch_articles_task, update_all_user_channels, update_channel
+from feed_subscription.services import _fetch_articles_task, update_all_user_channels, update_user_channel
 
 __all__ = [
-    'fetch_articles_task',
+    '_fetch_articles_task',
     'update_all_user_channels',
-    'update_channel'
+    'update_user_channel'
 ]
