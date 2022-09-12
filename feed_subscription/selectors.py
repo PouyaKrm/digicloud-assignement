@@ -8,14 +8,8 @@ from users.models import ApplicationUser
 
 
 def channel_exists(*args, user: ApplicationUser, rss_link: str) -> bool:
-    return FeedChannel.objects.filter(user=user, rss_link=rss_link, deleted=False).exists()
+    return FeedChannel.objects.filter(user=user, rss_link=rss_link).exists()
 
-
-def get_existing_channel_by_id(*args, user: ApplicationUser, channel_id: int) -> FeedChannel:
-    try:
-        return FeedChannel.objects.get(id=channel_id, user=user, deleted=False)
-    except ObjectDoesNotExist:
-        raise ApplicationErrorException(ErrorCodes.RECORD_NOT_FOUND)
 
 
 def get_channel_by_id(*args, user: ApplicationUser, channel_id: int) -> FeedChannel:
@@ -39,12 +33,12 @@ def try_get_channel_by_rss_link(*args, user: ApplicationUser, rss_link: str) -> 
         return None
 
 
-def get_user_existing_channels(*args, user: ApplicationUser):
-    return FeedChannel.objects.filter(user=user, deleted=False)
+def get_user_channels(*args, user: ApplicationUser):
+    return FeedChannel.objects.filter(user=user)
 
 
-def get_user_existing_channels_id_in(*args, user: ApplicationUser, channel_ids: List[int]):
-    return get_user_existing_channels(user=user).filter(id__in=channel_ids)
+def get_user_channels_id_in(*args, user: ApplicationUser, channel_ids: List[int]):
+    return get_user_channels(user=user).filter(id__in=channel_ids)
 
 
 def get_all_articles_by_channel_id(*args, user: ApplicationUser, channel_id: int, favorite=False, bookmark=False):

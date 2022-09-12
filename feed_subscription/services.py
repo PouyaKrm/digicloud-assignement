@@ -11,30 +11,28 @@ from feed_subscription.cache import is_user_channels_updating, is_user_channel_u
     set_user_channel_updating
 from feed_subscription.models import FeedChannel, Article
 from feed_subscription.selectors import try_get_channel_by_id, try_get_channel_by_rss_link, \
-    get_existing_channel_by_id, get_user_existing_channels, get_channel_by_id, get_article_by_id, \
-    get_user_existing_channels_id_in
+ get_user_channels, get_channel_by_id, get_article_by_id, \
+    get_user_channels_id_in
 from users.models import ApplicationUser
 from users.selectors import get_user_by_id
 from utils.scraper import get_articles
 
 
 def subscribe_to_channel(*args, user: ApplicationUser, rss_link: str, title: str) -> FeedChannel:
-    with transaction.atomic():
-        channel = try_get_channel_by_rss_link(user=user, rss_link=rss_link)
-        if channel is not None and channel.deleted:
-            channel.deleted = False
-        elif channel is None:
-            channel = FeedChannel(user=user, rss_link=rss_link)
+    channel = try_get_channel_by_rss_link(user=user, rss_link=rss_link)
+    if channel is not None:
         channel.title = title
-        channel.save()
+    else:
+        channel = FeedChannel(user=user, rss_link=rss_link, title=title)
+    channel.save()
     update_all_user_channels.delay(user.id)
     return channel
 
 
 def delete_channel(*args, user: ApplicationUser, channel_id: int) -> FeedChannel:
-    sub = get_existing_channel_by_id(user=user, channel_id=channel_id)
-    sub.deleted = True
-    sub.save()
+    sub = get_channel_by_id(user=user, channel_id=channel_id)
+    sub.delete()
+    # sub.save()
     return sub
 
 
@@ -51,7 +49,7 @@ def update_all_user_channels(user_id: int):
     set_user_channels_updating(user_id=user_id, insert=True)
     try:
         user = ApplicationUser.objects.get(id=user_id)
-        channel_ids = get_user_existing_channels(user=user).values_list('id', flat=True)
+        channel_ids = get_user_channels(user=user).values_list('id', flat=True)
         channel_ids = list(channel_ids)
         _update_channels(user_id=user_id, channel_ids=channel_ids)
     finally:
@@ -104,7 +102,7 @@ def _create_articles_from_task_result(result_list: List[dict], channel_id: int, 
 
 def _update_channels(user_id, channel_ids: List[int]):
     user = ApplicationUser.objects.get(id=user_id)
-    channels = get_user_existing_channels_id_in(user=user, channel_ids=channel_ids)
+    channels = get_user_channels_id_in(user=user, channel_ids=channel_ids)
     if channels.count() == 0:
         return
     g = group(get_ar.s(c.rss_link, c.id) for c in channels)

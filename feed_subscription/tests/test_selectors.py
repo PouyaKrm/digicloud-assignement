@@ -1,6 +1,6 @@
 from base_app.error_codes import ApplicationErrorException
 from .fixtures import *
-from ..selectors import channel_exists, get_existing_channel_by_id, try_get_channel_by_id, \
+from ..selectors import channel_exists, try_get_channel_by_id, \
     get_all_articles_by_channel_id, get_article_by_id
 
 pytestmark = pytest.mark.unit
@@ -9,16 +9,6 @@ pytestmark = pytest.mark.unit
 def test__channel_exists(channel):
     exist = channel_exists(user=channel.user, rss_link=channel.rss_link)
     assert exist
-
-
-def test__get_existing_channel_by_id__throws(channel):
-    with pytest.raises(ApplicationErrorException):
-        get_existing_channel_by_id(user=channel.user, channel_id=-1)
-
-
-def test__get_existing_channel_by_id__success(channel):
-    found = get_existing_channel_by_id(user=channel.user, channel_id=channel.id)
-    assert found.id == channel.id
 
 
 def test__try_get_channel_by_id__returns_none(channel):

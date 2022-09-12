@@ -12,7 +12,6 @@ class FeedChannel(BaseModel):
     description = models.TextField(null=True, blank=True)
     link = models.URLField(null=True, blank=True)
     last_update = models.DateTimeField(null=True, blank=True)
-    deleted = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ["user", "rss_link"]

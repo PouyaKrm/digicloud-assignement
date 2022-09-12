@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 from base_app.http_helpers import ok
 from base_app.pginations import BasePageNumberPagination
 from base_app.serializers import BaseSerializer
-from feed_subscription.selectors import channel_exists, get_user_existing_channels, get_channel_by_id, \
+from feed_subscription.selectors import channel_exists, get_user_channels, get_channel_by_id, \
     get_article_by_id, get_all_articles_by_channel_id
 from feed_subscription.serializers import FeedSubscriptionReadOnlySerializer, ArticleReadOnlySerializer
 from feed_subscription.services import subscribe_to_channel, delete_channel, update_user_channel, update_all_user_channels, \
@@ -46,7 +46,7 @@ class ChannelSubscriptionAPI(APIView):
 
     def get(self, request):
         paginator = BasePageNumberPagination()
-        query_set = get_user_existing_channels(user=request.user)
+        query_set = get_user_channels(user=request.user)
         result = paginator.paginate_queryset(query_set, request)
         sr = FeedSubscriptionReadOnlySerializer(result, many=True, request=request)
         return paginator.get_paginated_response(sr.data)

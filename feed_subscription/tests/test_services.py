@@ -88,21 +88,18 @@ def mock___create_articles_from_task_result(mocker, articles=None):
     return mock
 
 
-@pytest.mark.parametrize("deleted", [False, True])
-def test__test__subscribe_to_channel__channel_already_created(mocker, create_channel, user, deleted):
-    channel = create_channel(user=user, deleted=deleted)
+def test__test__subscribe_to_channel__channel_already_created(mocker, channel):
     mocked_task = mock__update_all_user_channels(mocker)
 
-    result = subscribe_to_channel(user=user, rss_link=channel.rss_link, title=channel.title)
+    result = subscribe_to_channel(user=channel.user, rss_link=channel.rss_link, title=channel.title)
 
-    mocked_task.delay.assert_called_with(user.id)
+    mocked_task.delay.assert_called_with(channel.user.id)
     assert result.title
 
 
 def test__subscribe_to_channel(mocker, user):
     title = fake.pystr()
     link = fake.uri()
-
     mocked_task = mock__update_all_user_channels(mocker)
 
     channel = subscribe_to_channel(user=user, rss_link=link, title=title)
@@ -114,7 +111,7 @@ def test__subscribe_to_channel(mocker, user):
 
 def test__delete_channel(channel):
     delete_channel(user=channel.user, channel_id=channel.id)
-    assert channel.deleted
+    assert not FeedChannel.objects.exists()
 
 
 def test__delete_articles(articles):

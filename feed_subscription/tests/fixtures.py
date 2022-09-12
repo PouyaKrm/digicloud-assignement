@@ -6,12 +6,12 @@ from feed_subscription.models import FeedChannel, Article
 
 @pytest.fixture
 def create_channel(db):
-    def create(*args, user: ApplicationUser, rss_link: str = None, delete=False):
+    def create(*args, user: ApplicationUser, rss_link: str = None):
         title = fake.pystr()
         link = rss_link
         if rss_link is None:
             link = fake.uri()
-        return FeedChannel.objects.create(user=user, title=title, rss_link=link, deleted=delete)
+        return FeedChannel.objects.create(user=user, title=title, rss_link=link)
 
     return create
 
