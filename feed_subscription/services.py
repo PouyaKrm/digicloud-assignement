@@ -2,6 +2,7 @@ from typing import List, Optional
 
 import backoff
 from celery import shared_task, group
+from celery.result import allow_join_result
 from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
@@ -25,7 +26,7 @@ def subscribe_to_channel(*args, user: ApplicationUser, rss_link: str, title: str
     else:
         channel = FeedChannel(user=user, rss_link=rss_link, title=title)
     channel.save()
-    update_all_user_channels.delay(user.id)
+    update_user_channel.delay(user.id, channel.id)
     return channel
 
 
@@ -40,10 +41,9 @@ def delete_articles(*args, channel_id: int):
     Article.objects.filter(channel_id=channel_id, is_favorite=False, is_bookmarked=False).delete()
 
 
-@shared_task
+@shared_task(ignore_result=True)
 def update_all_user_channels(user_id: int):
     updating = is_user_channels_updating(user_id=user_id)
-    print(updating)
     if updating:
         return
     set_user_channels_updating(user_id=user_id, insert=True)
@@ -105,19 +105,20 @@ def _update_channels(user_id, channel_ids: List[int]):
     channels = get_user_channels_id_in(user=user, channel_ids=channel_ids)
     if channels.count() == 0:
         return
-    g = group(get_ar.s(c.rss_link, c.id) for c in channels)
-    result = g().get()
-    Article.objects.filter(channel__in=channels).delete()
-    articles = []
-    for r in result:
-        if r is None:
-            continue
+    g = group(_fetch_articles_task.s(c.rss_link, c.id) for c in channels)
+    with allow_join_result():
+        result = g().get()
+        Article.objects.filter(channel__in=channels).delete()
+        articles = []
+        for r in result:
+            if r is None:
+                continue
 
-        ar = _create_articles_from_task_result(result_list=r.get('articles'), channel_id=r.get('channel_id'))
-        delete_articles(channel_id=r.get("channel_id"))
-        articles.extend(ar)
-    Article.objects.bulk_create(articles)
-    channels.update(last_update=timezone.now())
+            ar = _create_articles_from_task_result(result_list=r.get('articles'), channel_id=r.get('channel_id'))
+            delete_articles(channel_id=r.get("channel_id"))
+            articles.extend(ar)
+        Article.objects.bulk_create(articles)
+        channels.update(last_update=timezone.now())
 
 
 @shared_task
